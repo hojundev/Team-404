@@ -49,11 +49,24 @@ export default function StepFlow({ data, onReset }) {
         className="rounded-b-[2.5rem] px-5 pt-5 pb-7"
         style={{ background: color, boxShadow: `0 6px 24px ${color}44` }}
       >
-        {/* store info banner */}
-        <div className="bg-white/20 rounded-2xl px-4 py-3 mb-4">
-          <p className="text-white/70 text-xs font-bold uppercase tracking-widest">Destination</p>
-          <p className="text-white font-black text-lg leading-tight">{data.store_name}</p>
-          <p className="text-white/80 text-sm font-semibold">{data.store_address}</p>
+        {/* store info banner with image */}
+        <div className="bg-white/20 rounded-2xl overflow-hidden mb-4 relative shadow-md">
+          {data.store_image ? (
+            <img 
+              src={data.store_image} 
+              alt={data.store_name} 
+              className="w-full h-40 object-cover opacity-90"
+            />
+          ) : (
+            <div className="w-full h-40 bg-black/20 flex items-center justify-center">
+              <span className="text-3xl">🏪</span>
+            </div>
+          )}
+          <div className="p-4 bg-black/40 absolute bottom-0 left-0 right-0 backdrop-blur-sm">
+            <p className="text-white/80 text-xs font-bold uppercase tracking-widest">Destination</p>
+            <p className="text-white font-black text-lg leading-tight drop-shadow-md">{data.store_name}</p>
+            <p className="text-white/90 text-sm font-semibold drop-shadow-md">{data.store_address}</p>
+          </div>
         </div>
 
         {/* top nav row */}

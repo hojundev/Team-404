@@ -19,12 +19,12 @@ function stripHtml(str) {
 
 function maneuverMeta(maneuver = "") {
   const m = maneuver.toLowerCase();
-  if (m.includes("turn-right"))  return { image: "turn_right.png",   type: "Turn Right" };
-  if (m.includes("turn-left"))   return { image: "turn_left.png",    type: "Turn Left" };
-  if (m.includes("roundabout"))  return { image: "roundabout.png",   type: "Roundabout" };
-  if (m.includes("straight"))    return { image: "straight.png",     type: "Go Straight" };
-  if (m.includes("arrive"))      return { image: "arrive.png",       type: "Arrive" };
-  return                                { image: "walk_straight.png", type: "Continue" };
+  if (m.includes("turn-right")) return { image: "turn_right.png", type: "Turn Right" };
+  if (m.includes("turn-left")) return { image: "turn_left.png", type: "Turn Left" };
+  if (m.includes("roundabout")) return { image: "roundabout.png", type: "Roundabout" };
+  if (m.includes("straight")) return { image: "straight.png", type: "Go Straight" };
+  if (m.includes("arrive")) return { image: "arrive.png", type: "Arrive" };
+  return { image: "walk_straight.png", type: "Continue" };
 }
 
 function buildLabel(type, instruction) {
@@ -51,10 +51,10 @@ function buildSteps(steps) {
     let label, image;
 
     if (s.travel_mode === "TRANSIT" && s.transit_details) {
-      const t    = s.transit_details;
+      const t = s.transit_details;
       const line = t.line?.short_name || t.line?.name || "Bus";
-      const dep  = t.departure_stop?.name || "";
-      const arr  = t.arrival_stop?.name   || "";
+      const dep = t.departure_stop?.name || "";
+      const arr = t.arrival_stop?.name || "";
       label = `Take ${line}${dep ? ` from ${dep}` : ""}${arr ? ` → ${arr}` : ""}`;
       image = `/public/images/walk_straight.png`;
     } else {
@@ -65,9 +65,9 @@ function buildSteps(steps) {
 
     return {
       instruction,
-      distanceText:  s.distance?.text,
-      distanceM:     toMetres(s.distance?.text),
-      durationSecs:  s.duration?.value ?? 0,
+      distanceText: s.distance?.text,
+      distanceM: toMetres(s.distance?.text),
+      durationSecs: s.duration?.value ?? 0,
       image,
       label,
     };
@@ -77,7 +77,7 @@ function buildSteps(steps) {
     const prev = acc[acc.length - 1];
     const isLast = i === labelled.length - 1;
     if (prev && prev.label === cur.label && !isLast) {
-      prev.distanceM    += cur.distanceM;
+      prev.distanceM += cur.distanceM;
       prev.durationSecs += cur.durationSecs;
       const totalM = prev.distanceM;
       prev.distanceText = totalM >= 1000
@@ -92,13 +92,13 @@ function buildSteps(steps) {
   return merged
     .filter((s, i) => i === merged.length - 1 || s.distanceM >= MIN_STEP_METRES)
     .map((s, i) => ({
-      step:          i + 1,
-      instruction:   s.instruction,
+      step: i + 1,
+      instruction: s.instruction,
       rohingya_text: s.instruction,
-      distance:      s.distanceText,
-      image:         s.image,
-      label:         s.label,
-      audio:         `/public/audio/route_step${i + 1}.mp3`,
+      distance: s.distanceText,
+      image: s.image,
+      label: s.label,
+      audio: `/public/audio/route_step${i + 1}.mp3`,
     }));
 }
 
@@ -111,17 +111,18 @@ function buildFallbackResponse(lat, lng) {
     total_distance: "0.3 km",
     total_duration: "4 mins",
     route: [
-      { step:1, instruction:"Head north on the sidewalk", rohingya_text:"উত্তর দিকে হাঁটুন", label:"Continue", image:"/public/images/walk_straight.png", audio:"/public/audio/route_step1.mp3" },
-      { step:2, instruction:"Turn right at the corner",   rohingya_text:"ডানে ঘুরুন",          label:"Turn Right", image:"/public/images/turn_right.png",  audio:"/public/audio/route_step2.mp3" },
-      { step:3, instruction:"Store is on your left",      rohingya_text:"বামে দোকান",           label:"Arrive",   image:"/public/images/arrive.png",       audio:"/public/audio/route_step3.mp3" },
+      { step: 1, instruction: "Head north on the sidewalk", rohingya_text: "উত্তর দিকে হাঁটুন", label: "Continue", image: "/public/images/walk_straight.png", audio: "/public/audio/route_step1.mp3" },
+      { step: 2, instruction: "Turn right at the corner", rohingya_text: "ডানে ঘুরুন", label: "Turn Right", image: "/public/images/turn_right.png", audio: "/public/audio/route_step2.mp3" },
+      { step: 3, instruction: "Store is on your left", rohingya_text: "বামে দোকান", label: "Arrive", image: "/public/images/arrive.png", audio: "/public/audio/route_step3.mp3" },
     ],
     store_steps: [
-      { step:1, instruction:"Enter through the front door", rohingya_text:"দোকানে ঢুকুন",      image:"/public/images/store_enter.png",   audio:"/public/audio/store_step1.mp3" },
-      { step:2, instruction:"Take a basket or cart",        rohingya_text:"ঝুড়ি নিন",           image:"/public/images/store_basket.png",  audio:"/public/audio/store_step2.mp3" },
-      { step:3, instruction:"Pick the items you need",      rohingya_text:"জিনিস তুলুন",         image:"/public/images/store_pick.png",    audio:"/public/audio/store_step3.mp3" },
-      { step:4, instruction:"Go to the cashier counter",    rohingya_text:"কাউন্টারে যান",       image:"/public/images/store_cashier.png", audio:"/public/audio/store_step4.mp3" },
-      { step:5, instruction:"Pay and collect your bags",    rohingya_text:"টাকা দিয়ে ব্যাগ নিন", image:"/public/images/store_pay.png",     audio:"/public/audio/store_step5.mp3" },
+      { step: 1, instruction: "Enter through the front door", rohingya_text: "দোকানে ঢুকুন", image: "/public/images/store_enter.png", audio: "/public/audio/store_step1.mp3" },
+      { step: 2, instruction: "Take a basket or cart", rohingya_text: "ঝুড়ি নিন", image: "/public/images/store_basket.png", audio: "/public/audio/store_step2.mp3" },
+      { step: 3, instruction: "Pick the items you need", rohingya_text: "জিনিস তুলুন", image: "/public/images/store_pick.png", audio: "/public/audio/store_step3.mp3" },
+      { step: 4, instruction: "Go to the cashier counter", rohingya_text: "কাউন্টারে যান", image: "/public/images/store_cashier.png", audio: "/public/audio/store_step4.mp3" },
+      { step: 5, instruction: "Pay and collect your bags", rohingya_text: "টাকা দিয়ে ব্যাগ নিন", image: "/public/images/store_pay.png", audio: "/public/audio/store_step5.mp3" },
     ],
+    store_image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
   };
 }
 
@@ -147,19 +148,19 @@ app.get("/api/nearest-grocery", async (req, res) => {
       return res.json(buildFallbackResponse(parseFloat(lat), parseFloat(lng)));
     }
 
-    const store    = placesRes.data.results[0];
+    const store = placesRes.data.results[0];
     const storeLat = store.geometry.location.lat;
     const storeLng = store.geometry.location.lng;
-    const dest     = `${storeLat},${storeLng}`;
-    const origin   = `${lat},${lng}`;
+    const dest = `${storeLat},${storeLng}`;
+    const origin = `${lat},${lng}`;
 
     /* 2. fetch walking directions to get real distance */
     const walkRes = await axios.get("https://maps.googleapis.com/maps/api/directions/json", {
       params: { origin, destination: dest, mode: "walking", key: GMAPS_KEY }
     });
 
-    const walkLegs     = walkRes.data.routes?.[0]?.legs?.[0];
-    const walkDistM    = walkLegs?.distance?.value ?? Infinity;
+    const walkLegs = walkRes.data.routes?.[0]?.legs?.[0];
+    const walkDistM = walkLegs?.distance?.value ?? Infinity;
     const WALK_LIMIT_M = 1500;
 
     let mode, legs;
@@ -196,18 +197,24 @@ app.get("/api/nearest-grocery", async (req, res) => {
     const route = buildSteps(legs?.steps || []);
 
     const store_steps = [
-      { step:1, instruction:"Enter through the front door", rohingya_text:"দোকানে ঢুকুন",      image:"/public/images/store_enter.png",   audio:"/public/audio/store_step1.mp3" },
-      { step:2, instruction:"Take a basket or cart",        rohingya_text:"ঝুড়ি নিন",           image:"/public/images/store_basket.png",  audio:"/public/audio/store_step2.mp3" },
-      { step:3, instruction:"Pick the items you need",      rohingya_text:"জিনিস তুলুন",         image:"/public/images/store_pick.png",    audio:"/public/audio/store_step3.mp3" },
-      { step:4, instruction:"Go to the cashier counter",    rohingya_text:"কাউন্টারে যান",       image:"/public/images/store_cashier.png", audio:"/public/audio/store_step4.mp3" },
-      { step:5, instruction:"Pay and collect your bags",    rohingya_text:"টাকা দিয়ে ব্যাগ নিন", image:"/public/images/store_pay.png",     audio:"/public/audio/store_step5.mp3" },
+      { step: 1, instruction: "Enter through the front door", rohingya_text: "দোকানে ঢুকুন", image: "/public/images/store_enter.png", audio: "/public/audio/store_step1.mp3" },
+      { step: 2, instruction: "Take a basket or cart", rohingya_text: "ঝুড়ি নিন", image: "/public/images/store_basket.png", audio: "/public/audio/store_step2.mp3" },
+      { step: 3, instruction: "Pick the items you need", rohingya_text: "জিনিস তুলুন", image: "/public/images/store_pick.png", audio: "/public/audio/store_step3.mp3" },
+      { step: 4, instruction: "Go to the cashier counter", rohingya_text: "কাউন্টারে যান", image: "/public/images/store_cashier.png", audio: "/public/audio/store_step4.mp3" },
+      { step: 5, instruction: "Pay and collect your bags", rohingya_text: "টাকা দিয়ে ব্যাগ নিন", image: "/public/images/store_pay.png", audio: "/public/audio/store_step5.mp3" },
     ];
 
+    let storeImage = "/public/images/demo_store.png";
+    if (store.photos && store.photos.length > 0) {
+      const photoRef = store.photos[0].photo_reference;
+      storeImage = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${GMAPS_KEY}`;
+    }
+
     return res.json({
-      store_name:     store.name,
-      store_address:  store.vicinity,
-      store_lat:      storeLat,
-      store_lng:      storeLng,
+      store_name: store.name,
+      store_address: store.vicinity,
+      store_lat: storeLat,
+      store_lng: storeLng,
       mode,
       total_distance: legs?.distance?.text,
       total_duration: legs?.duration?.text,
