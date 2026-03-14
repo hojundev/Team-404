@@ -1,65 +1,84 @@
 import Avatar from "./Avatar";
 import { useAudio } from "../hooks/useAudio";
 
-function renderIcon(label = "", color) {
-  const l = label.toLowerCase();
-  if (l.startsWith("turn right")) return (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M28 52 L28 34 L44 34 L44 24 L56 40 L44 56 L44 46 L34 46 L34 52 Z" fill={color}/>
-    </svg>
-  );
-  if (l.startsWith("turn left")) return (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M52 52 L52 34 L36 34 L36 24 L24 40 L36 56 L36 46 L46 46 L46 52 Z" fill={color}/>
-    </svg>
-  );
-  if (l.startsWith("roundabout")) return (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <circle cx="40" cy="40" r="14" stroke={color} strokeWidth="5" fill="none"/>
-      <path d="M54 26 L60 20 L60 32 L48 32 Z" fill={color}/>
-    </svg>
-  );
-  if (l.startsWith("arrive")) return (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M40 16 C30 16 22 24 22 34 C22 46 40 64 40 64 C40 64 58 46 58 34 C58 24 50 16 40 16Z" fill={color}/>
-      <circle cx="40" cy="34" r="7" fill="white"/>
-    </svg>
-  );
-  // default: straight arrow
-  return (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M30 54 L30 38 L22 38 L40 22 L58 38 L50 38 L50 54 Z" fill={color}/>
-    </svg>
-  );
+// Iconify CDN — fluent-emoji set (Microsoft illustrated emoji, free, no key)
+const ICON = (name) => `https://api.iconify.design/fluent-emoji/${name}.svg`;
+
+const LABEL_ICONS = [
+  // ── store steps (must come before generic "take"/"walk" matches) ──
+  ["front door",       ICON("door")],
+  ["enter",            ICON("door")],
+  ["basket",           ICON("basket")],
+  ["shopping cart",    ICON("shopping-cart")],
+  ["cart",             ICON("shopping-cart")],
+  ["pick the items",   ICON("shopping-bags")],
+  ["collect",          ICON("shopping-bags")],
+  ["cashier",          ICON("credit-card")],
+  ["counter",          ICON("credit-card")],
+  ["pay and",          ICON("money-bag")],
+  ["pay",              ICON("money-bag")],
+  // ── health steps ──
+  ["doctor",           ICON("stethoscope")],
+  ["clinic",           ICON("stethoscope")],
+  ["hospital",         ICON("hospital")],
+  ["pharmacy",         ICON("pill")],
+  ["medicine",         ICON("pill")],
+  ["reception",        ICON("medical-symbol")],
+  ["emergency",        ICON("ambulance")],
+  // ── navigation ──
+  ["turn right",       ICON("right-arrow")],
+  ["turn left",        ICON("left-arrow")],
+  ["roundabout",       ICON("counterclockwise-arrows-button")],
+  ["arrive",           ICON("round-pushpin")],
+  ["go straight",      ICON("up-arrow")],
+  ["destination",      ICON("round-pushpin")],
+  // ── transit (only match when it's clearly a bus/transit step) ──
+  ["take the bus",     ICON("bus")],
+  ["take bus",         ICON("bus")],
+  ["bus",              ICON("bus")],
+  ["train",            ICON("train")],
+  ["transit",          ICON("bus")],
+  // ── walking (catch-all for navigation steps) ──
+  ["continue",         ICON("person-walking")],
+  ["head ",            ICON("person-walking")],
+  ["walk",             ICON("person-walking")],
+];
+
+function stepIcon(label = "", instruction = "") {
+  const text = (label + " " + instruction).toLowerCase();
+  for (const [key, url] of LABEL_ICONS) {
+    if (text.includes(key)) return url;
+  }
+  return ICON("person-running");
 }
 
 export default function StepCard({ step, index, color, total }) {
   const { playing, toggle } = useAudio(step.audio);
+  const iconUrl = stepIcon(step.label, step.instruction);
 
   return (
-    <div className="slide-up w-full max-w-md mx-auto flex flex-col gap-5">
+    <div className="slide-up w-full max-w-md mx-auto flex flex-col gap-4">
 
-      {/* ── big direction visual ── */}
+      {/* ── illustration ── */}
       <div
-        className="w-full flex flex-col items-center justify-center gap-4 py-12 rounded-3xl border-2 border-black/5"
+        className="w-full flex items-center justify-center py-10 rounded-3xl border-2 border-black/5"
         style={{ background: `${color}10` }}
       >
-        {renderIcon(step.label, color)}
+        <img
+          src={iconUrl}
+          alt={step.label}
+          className="w-36 h-36 object-contain"
+          onError={e => { e.target.style.display = "none"; }}
+        />
+      </div>
 
-        <p className="text-4xl font-black text-gray-800 text-center px-4">
-          {step.label || "Continue"}
+      {/* ── instruction (hero text) + distance ── */}
+      <div className="text-center px-2">
+        <p className="text-2xl font-black text-gray-800 leading-snug">
+          {step.instruction}
         </p>
-
         {step.distance && (
-          <div
-            className="flex items-center gap-2 px-5 py-2 rounded-full"
-            style={{ background: color }}
-          >
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full mt-3" style={{ background: color }}>
             <span className="text-xl font-black text-white">{step.distance}</span>
             {step.duration && (
               <span className="text-sm font-semibold text-white/80">· {step.duration}</span>
@@ -68,7 +87,7 @@ export default function StepCard({ step, index, color, total }) {
         )}
       </div>
 
-      {/* ── detail + audio ── */}
+      {/* ── audio ── */}
       <div
         onClick={toggle}
         className="flex items-center gap-4 rounded-2xl p-4 cursor-pointer transition-all"
@@ -78,13 +97,9 @@ export default function StepCard({ step, index, color, total }) {
           boxShadow: playing ? `0 4px 20px ${color}33` : "0 2px 8px #0001",
         }}
       >
-        <Avatar playing={playing} color={color} size={56} />
-
+        <Avatar playing={playing} color={color} size={52} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-500 leading-snug line-clamp-2">
-            {step.instruction}
-          </p>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2">
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0"
               style={{ background: playing ? color : "#F3F4F6" }}
