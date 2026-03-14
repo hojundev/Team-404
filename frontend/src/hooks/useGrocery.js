@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 const API = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
@@ -9,7 +9,23 @@ export function useGrocery() {
     error:  null,
   });
 
-  const fetchGrocery = useCallback(async () => {
+  // Store coords + placeType so we can refetch with a different mode
+  const lastParams = useRef(null);
+
+  const _fetch = useCallback(async ({ lat, lng, placeType, mode }) => {
+    setState(s => ({ ...s, status: "loading" }));
+    try {
+      const url = `${API}/api/nearest-grocery?lat=${lat}&lng=${lng}&type=${placeType}${mode ? `&mode=${mode}` : ""}`;
+      const res  = await fetch(url);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      setState({ status: "ready", data, error: null });
+    } catch (err) {
+      setState({ status: "error", data: null, error: err.message });
+    }
+  }, []);
+
+  const fetchGrocery = useCallback(async ({ placeType = "grocery_or_supermarket" } = {}) => {
     setState({ status: "locating", data: null, error: null });
 
     let lat, lng;
@@ -30,20 +46,20 @@ export function useGrocery() {
       return;
     }
 
-    setState(s => ({ ...s, status: "loading" }));
+    lastParams.current = { lat, lng, placeType };
+    await _fetch({ lat, lng, placeType });
+  }, [_fetch]);
 
-    try {
-      const res  = await fetch(`${API}/api/nearest-grocery?lat=${lat}&lng=${lng}`);
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const data = await res.json();
-      setState({ status: "ready", data, error: null });
-    } catch (err) {
-      setState({ status: "error", data: null, error: err.message });
-    }
+  // Switch to a different travel mode using the already-found location
+  const switchMode = useCallback(async (mode) => {
+    if (!lastParams.current) return;
+    await _fetch({ ...lastParams.current, mode });
+  }, [_fetch]);
+
+  const reset = useCallback(() => {
+    lastParams.current = null;
+    setState({ status: "idle", data: null, error: null });
   }, []);
 
-  const reset = useCallback(() =>
-    setState({ status: "idle", data: null, error: null }), []);
-
-  return { ...state, fetchGrocery, reset };
+  return { ...state, fetchGrocery, switchMode, reset };
 }

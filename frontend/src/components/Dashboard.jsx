@@ -1,7 +1,7 @@
-export default function Dashboard({ onGrocery }) {
+export default function Dashboard({ onFood, onDoctor }) {
   const categories = [
-    { id: "grocery", label: "খাবার কিনুন", labelEn: "Grocery", emoji: "🍚", color: "#FF8C42", bg: "#FFF0E5", border: "#FFD4B0", action: onGrocery },
-    { id: "doctor",  label: "ডাক্তার",     labelEn: "Doctor",   emoji: "🏥", color: "#3B82F6", bg: "#E8F0FF", border: "#BFDBFE", action: null },
+    { id: "grocery", label: "খাবার কিনুন", labelEn: "Food & Stores", emoji: "🍚", color: "#FF8C42", bg: "#FFF0E5", border: "#FFD4B0", action: onFood },
+    { id: "doctor",  label: "ডাক্তার",     labelEn: "Doctor",        emoji: "🏥", color: "#3B82F6", bg: "#E8F0FF", border: "#BFDBFE", action: onDoctor },
     { id: "bus",     label: "বাস",         labelEn: "Bus",      emoji: "🚌", color: "#10B981", bg: "#E8F8EF", border: "#A7F3D0", action: null },
     { id: "school",  label: "স্কুল",       labelEn: "School",   emoji: "🏫", color: "#8B5CF6", bg: "#F0EBFF", border: "#DDD6FE", action: null },
     { id: "911",     label: "জরুরি",       labelEn: "Emergency",emoji: "🚨", color: "#EF4444", bg: "#FFE8E8", border: "#FECACA", action: null },
@@ -65,7 +65,7 @@ export default function Dashboard({ onGrocery }) {
           <div>
             <p className="font-black text-sm text-orange-500">Tip</p>
             <p className="text-xs text-gray-400 font-semibold">
-              Tap Grocery to find the nearest store · 🍚 চাপ দিন
+              Tap Food & Stores to find what's nearby · 🍚 চাপ দিন
             </p>
           </div>
         </div>
