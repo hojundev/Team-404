@@ -1,4 +1,4 @@
-export default function Dashboard({ onFood, onDoctor }) {
+export default function Dashboard({ onFood, onDoctor, onCustom }) {
   const categories = [
     { id: "grocery", label: "খাবার কিনুন", labelEn: "Food & Stores", emoji: "🍚", color: "#FF8C42", bg: "#FFF0E5", border: "#FFD4B0", action: onFood },
     { id: "doctor",  label: "ডাক্তার",     labelEn: "Doctor",        emoji: "🏥", color: "#3B82F6", bg: "#E8F0FF", border: "#BFDBFE", action: onDoctor },
@@ -56,9 +56,26 @@ export default function Dashboard({ onFood, onDoctor }) {
           ))}
         </div>
 
+        {/* custom AI button — full width */}
+        <button
+          onClick={onCustom}
+          className="mt-1 w-full flex items-center gap-4 rounded-3xl px-5 py-5 active:scale-95 transition-transform"
+          style={{
+            background: "linear-gradient(135deg, #6366F115, #8B5CF615)",
+            border: "2.5px solid #8B5CF644",
+            boxShadow: "0 4px 20px #6366F11E",
+          }}
+        >
+          <span className="text-5xl leading-none">❓</span>
+          <div className="text-left">
+            <p className="font-black text-lg" style={{ color: "#6366F1" }}>অন্য কিছু দরকার?</p>
+            <p className="text-sm font-bold text-gray-400">Something else? Ask AI →</p>
+          </div>
+        </button>
+
         {/* tip card */}
         <div
-          className="mt-6 flex items-center gap-3 rounded-2xl p-4"
+          className="mt-2 flex items-center gap-3 rounded-2xl p-4"
           style={{ background: "white", border: "2px solid #FFD4B0" }}
         >
           <span className="text-3xl">💡</span>

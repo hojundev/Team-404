@@ -8,18 +8,33 @@ const ICON = (name) => `https://api.iconify.design/fluent-emoji/${name}.svg`;
 const MULTI_ICONS = [
   // ── newcomer / canada context ──
   ["healthcare here is free",  [ICON("hospital"),          ICON("id-card"),              ICON("smiling-face-with-open-hands")]],
+  ["service is free",          [ICON("smiling-face-with-open-hands"), ICON("money-bag")]],
+  ["it is free",               [ICON("smiling-face-with-open-hands"), ICON("money-bag")]],
+  ["show your health card",    [ICON("id-card"),            ICON("hospital")]],
   ["health card",              [ICON("id-card"),            ICON("hospital")]],
   ["ohip",                     [ICON("id-card"),            ICON("hospital")]],
+  ["show your id",             [ICON("id-card"),            ICON("waving-hand")]],
   ["newcomer",                 [ICON("waving-hand"),        ICON("id-card")]],
+  ["ask for interpreter",      [ICON("speaking-head"),      ICON("speech-balloon")]],
   ["interpreter",              [ICON("speaking-head"),      ICON("speech-balloon")]],
   ["halal",                    [ICON("green-circle"),       ICON("shopping-bags")]],
   ["tip",                      [ICON("money-with-wings"),   ICON("receipt")]],
+  ["show prescription",        [ICON("memo"),               ICON("pill")]],
   ["prescription",             [ICON("memo"),               ICON("pill")]],
   // ── store ──
   ["bag your",                 [ICON("shopping-bags"),      ICON("raising-hands")]],
   ["shelf label",              [ICON("magnifying-glass"),   ICON("label")]],
   ["tap your card",            [ICON("credit-card"),        ICON("mobile-phone")]],
   ["pay cash",                 [ICON("money-bag"),          ICON("coin")]],
+  // ── government / documents ──
+  ["take a number",            [ICON("ticket"),             ICON("hourglass-not-done")]],
+  ["fill out",                 [ICON("memo"),               ICON("pen")]],
+  ["sign your name",           [ICON("memo"),               ICON("pen")]],
+  ["keep your receipt",        [ICON("receipt"),            ICON("ok-hand")]],
+  ["take your receipt",        [ICON("receipt"),            ICON("ok-hand")]],
+  // ── bank / money ──
+  ["send money",               [ICON("money-with-wings"),   ICON("globe-showing-asia-australia")]],
+  ["exchange rate",            [ICON("currency-exchange"),  ICON("money-bag")]],
   // ── health ──
   ["emergency",                [ICON("ambulance"),          ICON("hospital")]],
   ["triage",                   [ICON("medical-symbol"),     ICON("stethoscope")]],
@@ -54,6 +69,14 @@ const SINGLE_ICONS = [
   ["reception",          ICON("medical-symbol")],
   ["wait",               ICON("hourglass-not-done")],
   ["sign your name",     ICON("memo")],
+  ["show your",          ICON("id-card")],
+  ["take a number",      ICON("ticket")],
+  ["receipt",            ICON("receipt")],
+  ["form",               ICON("memo")],
+  ["bank",               ICON("bank")],
+  ["mosque",             ICON("mosque")],
+  ["pray",               ICON("folded-hands")],
+  ["counter",            ICON("credit-card")],
   ["order",              ICON("fork-and-knife-with-plate")],
   ["menu",               ICON("fork-and-knife-with-plate")],
   ["seated",             ICON("chair")],
@@ -149,7 +172,10 @@ function IconDisplay({ icons, color }) {
 
 export default function StepCard({ step, index, color, total }) {
   const { playing, toggle } = useAudio(step.audio);
-  const icons = stepIcons(step.label, step.instruction);
+  // AI-generated steps carry their own icons; hardcoded steps use keyword matching
+  const icons = step.icons?.length
+    ? step.icons.map(name => ICON(name))
+    : stepIcons(step.label, step.instruction);
 
   return (
     <div className="slide-up w-full max-w-md mx-auto flex flex-col gap-4">

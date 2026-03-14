@@ -10,17 +10,26 @@ export function useGrocery() {
   });
 
   const lastParams  = useRef(null);
-  const cancelToken = useRef(0); // increment to cancel any in-flight fetch
+  const cancelToken = useRef(0);
 
-  const _fetch = useCallback(async ({ lat, lng, placeType, mode, token }) => {
+  const _fetch = useCallback(async ({ lat, lng, placeType, searchQuery, customSteps, mode, token }) => {
     setState(s => ({ ...s, status: "loading" }));
     try {
-      const url = `${API}/api/find-place?lat=${lat}&lng=${lng}&type=${placeType}${mode ? `&mode=${mode}` : ""}`;
-      const res  = await fetch(url);
-      if (cancelToken.current !== token) return; // cancelled
+      const res = await fetch(`${API}/api/find-place`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat, lng,
+          type: placeType,
+          ...(mode        && { mode }),
+          ...(searchQuery && { searchQuery }),
+          ...(customSteps && { customSteps }),
+        }),
+      });
+      if (cancelToken.current !== token) return;
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
-      if (cancelToken.current !== token) return; // cancelled
+      if (cancelToken.current !== token) return;
       setState({ status: "ready", data, error: null });
     } catch (err) {
       if (cancelToken.current !== token) return;
@@ -28,7 +37,7 @@ export function useGrocery() {
     }
   }, []);
 
-  const fetchGrocery = useCallback(async ({ placeType = "grocery_or_supermarket" } = {}) => {
+  const fetchGrocery = useCallback(async ({ placeType = "grocery_or_supermarket", searchQuery, customSteps } = {}) => {
     const token = ++cancelToken.current;
     setState({ status: "locating", data: null, error: null });
 
@@ -40,7 +49,7 @@ export function useGrocery() {
           timeout: 10000,
         })
       );
-      if (cancelToken.current !== token) return; // cancelled while locating
+      if (cancelToken.current !== token) return;
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
     } catch (err) {
@@ -52,8 +61,8 @@ export function useGrocery() {
       return;
     }
 
-    lastParams.current = { lat, lng, placeType };
-    await _fetch({ lat, lng, placeType, token });
+    lastParams.current = { lat, lng, placeType, searchQuery, customSteps };
+    await _fetch({ lat, lng, placeType, searchQuery, customSteps, token });
   }, [_fetch]);
 
   const switchMode = useCallback(async (mode) => {
@@ -63,7 +72,7 @@ export function useGrocery() {
   }, [_fetch]);
 
   const reset = useCallback(() => {
-    cancelToken.current++; // cancel any in-flight request
+    cancelToken.current++;
     lastParams.current = null;
     setState({ status: "idle", data: null, error: null });
   }, []);

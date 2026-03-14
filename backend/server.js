@@ -3,10 +3,12 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
+const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const GMAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.use(cors());
 app.use(express.json());
@@ -182,10 +184,10 @@ function buildFallbackResponse(lat, lng) {
 }
 
 /* ── main endpoint ── */
-app.get("/api/find-place", async (req, res) => {
+app.post("/api/find-place", async (req, res) => {
   const TYPE_MAP = { doctor: "doctor", hospital: "hospital", pharmacy: "pharmacy" };
-  const rawType = req.query.type || "grocery_or_supermarket";
-  const { lat, lng, mode: modeOverride } = req.query;
+  const rawType = req.body.type || "grocery_or_supermarket";
+  const { lat, lng, mode: modeOverride, customSteps, searchQuery } = req.body;
   const type = TYPE_MAP[rawType] ?? rawType;
   if (!lat || !lng) return res.status(400).json({ error: "lat and lng are required" });
 
@@ -195,12 +197,18 @@ app.get("/api/find-place", async (req, res) => {
 
   try {
     /* 1. find nearby places and pick the most reliable one.
-          For health types, Google's nearbysearch tags every small clinic as
-          "hospital", so we use Text Search which returns proper institutions. */
+          - custom searchQuery: use text search with the AI-provided query
+          - health types: text search (nearbysearch tags everything as "hospital")
+          - everything else: nearby search by distance */
     const HEALTH_TYPES = new Set(["hospital", "doctor", "pharmacy"]);
     let candidates;
 
-    if (HEALTH_TYPES.has(type)) {
+    if (searchQuery) {
+      const textRes = await axios.get("https://maps.googleapis.com/maps/api/place/textsearch/json", {
+        params: { query: searchQuery, location: `${lat},${lng}`, radius: 15000, key: GMAPS_KEY }
+      });
+      candidates = textRes.data.results?.slice(0, 10) || [];
+    } else if (HEALTH_TYPES.has(type)) {
       const QUERY_LABEL  = { hospital: "hospital", doctor: "doctor clinic", pharmacy: "pharmacy" };
       const SEARCH_RADIUS = { hospital: 20000, doctor: 10000, pharmacy: 5000 };
       const textRes = await axios.get("https://maps.googleapis.com/maps/api/place/textsearch/json", {
@@ -325,11 +333,14 @@ app.get("/api/find-place", async (req, res) => {
       ],
     };
 
-    const insideSteps = INSIDE_STEPS[rawType] || INSIDE_STEPS["grocery_or_supermarket"];
+    const insideSteps = (customSteps?.length ? customSteps : null)
+      || INSIDE_STEPS[rawType]
+      || INSIDE_STEPS["grocery_or_supermarket"];
     const store_steps = insideSteps.map((s, i) => ({
       step:          i + 1,
       instruction:   s.instruction,
       rohingya_text: s.rohingya_text,
+      icons:         s.icons || null,
       audio:         `/public/audio/store_step${i + 1}.mp3`,
     }));
 
@@ -372,6 +383,59 @@ app.get("/api/find-place", async (req, res) => {
   } catch (err) {
     console.error("Google API error:", err.message);
     return res.json(buildFallbackResponse(parseFloat(lat), parseFloat(lng)));
+  }
+});
+
+/* ── AI custom scenario generator ── */
+app.post("/api/custom/generate", async (req, res) => {
+  const { description } = req.body;
+  if (!description?.trim()) return res.status(400).json({ error: "description required" });
+
+  try {
+    const prompt = `You are a guide for Rohingya refugees who recently arrived in Canada. They have low literacy in English and Bengali. They are navigating a completely new country with unfamiliar systems, language barriers, and cultural differences (no experience with Canadian banks, health cards, tipping, government offices, or social norms).
+
+The person described what they need: "${description.trim()}"
+
+Generate 2–4 nearby place options that would help them. Return ONLY a JSON array, no markdown, no explanation.
+
+Each item must have:
+- "label": Bengali label (2–3 words, Bangla script)
+- "labelEn": English label (2–3 words)
+- "emoji": single most relevant emoji
+- "color": one hex from: #10B981, #3B82F6, #EF4444, #F59E0B, #8B5CF6, #FF8C42, #EC4899
+- "placeType": best Google Places API type (bank, post_office, local_government_office, library, school, laundry, place_of_worship, atm, pharmacy, hospital, doctor, restaurant, cafe, hair_care, clothing_store, shopping_mall, grocery_or_supermarket)
+- "searchQuery": specific Google search query for Canada (e.g. "Western Union money transfer", "Islamic mosque", "Service Canada office", "halal grocery")
+- "insideSteps": array of 5–6 steps, each { "instruction": "...", "rohingya_text": "...", "icons": ["icon1", "icon2"] }
+
+CRITICAL rules for insideSteps:
+1. instruction must be MAX 8 WORDS. Short. Direct. No full sentences.
+2. Each step must have "icons": array of 1–2 icon names chosen from this exact list:
+   door, basket, shopping-cart, shopping-bags, credit-card, money-bag, money-with-wings,
+   coin, receipt, memo, pen, ticket, id-card, waving-hand, speaking-head, speech-balloon,
+   pill, stethoscope, hospital, ambulance, medical-symbol, hourglass-not-done, chair,
+   green-circle, raising-hands, ok-hand, folded-hands, smiling-face-with-open-hands,
+   fork-and-knife-with-plate, glass-of-milk, backhand-index-pointing-right,
+   magnifying-glass, books, mobile-phone, bank, mosque, globe-showing-asia-australia,
+   person-walking, bus, train, round-pushpin, right-arrow, left-arrow, up-arrow,
+   currency-exchange, label, shopping-bags, nail-polish, scissors, barber-pole,
+   briefcase, handshake, building-bank, classical-building, fire-station
+   Pick icons that visually represent the action. Use 2 icons when the step has two key concepts.
+3. Address real culture-shock moments for Rohingya newcomers:
+   - Canadian services are often FREE (healthcare, libraries, settlement services) — say so
+   - They may fear government offices or authority — reassure: "staff will help you", "you are safe"
+   - They don't know: OHIP health card, 15% tipping, self-bagging groceries, tap-to-pay
+   - Interpreter is a legal right — not optional, not extra cost
+   - They fled persecution — never make ID checks sound threatening; always pair with reassurance
+4. rohingya_text must be natural Bangla/Bengali script — conversational, not literal translation`;
+
+    const result = await gemini.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
+    const raw = result.text.trim()
+      .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+    const options = JSON.parse(raw);
+    res.json({ options });
+  } catch (err) {
+    console.error("Custom generate error:", err.message);
+    res.status(500).json({ error: "AI could not generate options. Please try again." });
   }
 });
 

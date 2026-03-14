@@ -42,6 +42,7 @@ Edit `backend/.env`:
 XAI_API_KEY=YOUR_KEY_HERE
 GOOGLE_MAPS_API_KEY=YOUR_KEY_HERE
 PORT=3001
+GEMINI_API_KEY=YOUR_KEY_HERE
 ```
 
 > **Don't have a key?** The app runs in **demo mode** automatically —  
