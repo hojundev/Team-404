@@ -22,10 +22,12 @@ export function useGrocery() {
       );
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
-    } catch {
-      // Fallback coords (Toronto downtown) for demo / desktop testing
-      lat = 43.6532;
-      lng = -79.3832;
+    } catch (err) {
+      const msg = err?.code === 1
+        ? "Location access denied. Please allow location permission and try again."
+        : "Could not get your location. Please try again.";
+      setState({ status: "error", data: null, error: msg });
+      return;
     }
 
     setState(s => ({ ...s, status: "loading" }));
