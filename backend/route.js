@@ -30,7 +30,7 @@ app.get('/api/find-destination', async (req, res) => {
     const searchQuery = encodeURIComponent(`${keyword}`);
     
     // Google Places Text Search biased to the user's location (5km radius)
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&location=${lat},${lng}&radius=5000&key=${GOOGLE_API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&location=${lat},${lng}&radius=5000&key=${GOOGLE_MAPS_API_KEY}`;
 
     const response = await axios.get(url);
     const places = response.data.results;
