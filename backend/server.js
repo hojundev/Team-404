@@ -209,8 +209,22 @@ app.get("/api/nearest-grocery", async (req, res) => {
     let storeImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"; // A nice grocery aisle fallback
 
     if (store.photos && store.photos.length > 0) {
-      const photoRef = store.photos[0].photo_reference;
-      storeImage = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${GMAPS_KEY}`;
+      try {
+        const photoRef = store.photos[0].photo_reference;
+        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${GMAPS_KEY}`;
+        
+        // Fetch the photo redirect URL gracefully on the backend to avoid browser API Key restrictions!
+        const photoRes = await axios.get(photoApiUrl, {
+          maxRedirects: 0,
+          validateStatus: (s) => s >= 200 && s < 400
+        });
+        
+        if (photoRes.headers.location) {
+          storeImage = photoRes.headers.location;
+        }
+      } catch (err) {
+        console.error("Photo retrieval warning:", err.message);
+      }
     }
 
     return res.json({
@@ -221,6 +235,7 @@ app.get("/api/nearest-grocery", async (req, res) => {
       mode,
       total_distance: legs?.distance?.text,
       total_duration: legs?.duration?.text,
+      store_image: storeImage,
       route,
       store_steps,
     });

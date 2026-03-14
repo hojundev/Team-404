@@ -1,8 +1,8 @@
 export default function RecommendScreen({ data, onConfirm, onBack, onSwitchMode, switching }) {
   const isWalking = data.mode === "walking";
-  const modeColor   = isWalking ? "#10B981" : "#3B82F6";
-  const modeEmoji   = isWalking ? "🚶" : "🚌";
-  const modeLabel   = isWalking ? "Walk" : "Take the Bus";
+  const modeColor = isWalking ? "#10B981" : "#3B82F6";
+  const modeEmoji = isWalking ? "🚶" : "🚌";
+  const modeLabel = isWalking ? "Walk" : "Take the Bus";
   const modeLabelBn = isWalking ? "হেঁটে যান" : "বাসে যান";
 
   return (
@@ -10,7 +10,7 @@ export default function RecommendScreen({ data, onConfirm, onBack, onSwitchMode,
 
       {/* header */}
       <div
-        className="px-5 pt-6 pb-10 rounded-b-[2.5rem]"
+        className="px-5 pt-6 pb-8 rounded-b-[2.5rem]"
         style={{ background: `linear-gradient(135deg, ${modeColor}, ${modeColor}cc)`, boxShadow: `0 8px 32px ${modeColor}44` }}
       >
         <button
@@ -19,8 +19,20 @@ export default function RecommendScreen({ data, onConfirm, onBack, onSwitchMode,
         >
           ←
         </button>
+
+        {/* Embedded Store Image */}
+        {data.store_image && (
+          // <div className="w-full mb-5 rounded-[1.5rem] overflow-hidden bg-black/10 flex items-center justify-center shadow-inner">
+          <img
+            src={data.store_image}
+            alt={data.store_name}
+            className="w-full h-60 object-contain drop-shadow-md my-[-70px]"
+          />
+          // </div>
+        )}
+
         <p className="text-white/70 text-xs font-black uppercase tracking-widest">Found Nearby</p>
-        <h2 className="text-2xl font-black text-white mt-1 leading-tight">{data.store_name}</h2>
+        <h2 className="text-2xl font-black text-white mt-1 leading-tight drop-shadow-sm">{data.store_name}</h2>
         <p className="text-white/80 text-sm font-semibold mt-0.5">{data.store_address}</p>
       </div>
 
@@ -54,8 +66,8 @@ export default function RecommendScreen({ data, onConfirm, onBack, onSwitchMode,
         {/* mode toggle */}
         <div className="bg-white rounded-2xl p-1.5 flex gap-1.5 border border-gray-100">
           {[
-            { mode: "walking", emoji: "🚶", label: "Walk",     labelBn: "হাঁটুন",  color: "#10B981" },
-            { mode: "transit", emoji: "🚌", label: "Bus",      labelBn: "বাস",     color: "#3B82F6" },
+            { mode: "walking", emoji: "🚶", label: "Walk", labelBn: "হাঁটুন", color: "#10B981" },
+            { mode: "transit", emoji: "🚌", label: "Bus", labelBn: "বাস", color: "#3B82F6" },
           ].map(opt => {
             const active = data.mode === opt.mode;
             return (
