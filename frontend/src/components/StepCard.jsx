@@ -1,50 +1,45 @@
 import Avatar from "./Avatar";
 import { useAudio } from "../hooks/useAudio";
 
-const DIRECTION_ICON = {
-  "Turn Right":   ({ color }) => (
+function renderIcon(label = "", color) {
+  const l = label.toLowerCase();
+  if (l.startsWith("turn right")) return (
     <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
       <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
       <path d="M28 52 L28 34 L44 34 L44 24 L56 40 L44 56 L44 46 L34 46 L34 52 Z" fill={color}/>
     </svg>
-  ),
-  "Turn Left":    ({ color }) => (
+  );
+  if (l.startsWith("turn left")) return (
     <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
       <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
       <path d="M52 52 L52 34 L36 34 L36 24 L24 40 L36 56 L36 46 L46 46 L46 52 Z" fill={color}/>
     </svg>
-  ),
-  "Go Straight":  ({ color }) => (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M30 54 L30 38 L22 38 L40 22 L58 38 L50 38 L50 54 Z" fill={color}/>
-    </svg>
-  ),
-  "Continue":     ({ color }) => (
-    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
-      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
-      <path d="M30 54 L30 38 L22 38 L40 22 L58 38 L50 38 L50 54 Z" fill={color}/>
-    </svg>
-  ),
-  "Roundabout":   ({ color }) => (
+  );
+  if (l.startsWith("roundabout")) return (
     <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
       <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
       <circle cx="40" cy="40" r="14" stroke={color} strokeWidth="5" fill="none"/>
       <path d="M54 26 L60 20 L60 32 L48 32 Z" fill={color}/>
     </svg>
-  ),
-  "Arrive":       ({ color }) => (
+  );
+  if (l.startsWith("arrive")) return (
     <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
       <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
       <path d="M40 16 C30 16 22 24 22 34 C22 46 40 64 40 64 C40 64 58 46 58 34 C58 24 50 16 40 16Z" fill={color}/>
       <circle cx="40" cy="34" r="7" fill="white"/>
     </svg>
-  ),
-};
+  );
+  // default: straight arrow
+  return (
+    <svg viewBox="0 0 80 80" width="96" height="96" fill="none">
+      <circle cx="40" cy="40" r="40" fill={color} opacity="0.12"/>
+      <path d="M30 54 L30 38 L22 38 L40 22 L58 38 L50 38 L50 54 Z" fill={color}/>
+    </svg>
+  );
+}
 
 export default function StepCard({ step, index, color, total }) {
   const { playing, toggle } = useAudio(step.audio);
-  const Icon = DIRECTION_ICON[step.label] || DIRECTION_ICON["Continue"];
 
   return (
     <div className="slide-up w-full max-w-md mx-auto flex flex-col gap-5">
@@ -54,7 +49,7 @@ export default function StepCard({ step, index, color, total }) {
         className="w-full flex flex-col items-center justify-center gap-4 py-12 rounded-3xl border-2 border-black/5"
         style={{ background: `${color}10` }}
       >
-        <Icon color={color} />
+        {renderIcon(step.label, color)}
 
         <p className="text-4xl font-black text-gray-800 text-center px-4">
           {step.label || "Continue"}

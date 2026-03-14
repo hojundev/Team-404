@@ -19,12 +19,30 @@ function stripHtml(str) {
 
 function maneuverMeta(maneuver = "") {
   const m = maneuver.toLowerCase();
-  if (m.includes("turn-right"))  return { image: "turn_right.png",   emoji: "➡️",  label: "Turn Right" };
-  if (m.includes("turn-left"))   return { image: "turn_left.png",    emoji: "⬅️",  label: "Turn Left" };
-  if (m.includes("roundabout"))  return { image: "roundabout.png",   emoji: "🔄",  label: "Roundabout" };
-  if (m.includes("straight"))    return { image: "straight.png",     emoji: "⬆️",  label: "Go Straight" };
-  if (m.includes("arrive"))      return { image: "arrive.png",       emoji: "📍",  label: "Arrive" };
-  return                                { image: "walk_straight.png", emoji: "⬆️",  label: "Continue" };
+  if (m.includes("turn-right"))  return { image: "turn_right.png",   type: "Turn Right" };
+  if (m.includes("turn-left"))   return { image: "turn_left.png",    type: "Turn Left" };
+  if (m.includes("roundabout"))  return { image: "roundabout.png",   type: "Roundabout" };
+  if (m.includes("straight"))    return { image: "straight.png",     type: "Go Straight" };
+  if (m.includes("arrive"))      return { image: "arrive.png",       type: "Arrive" };
+  return                                { image: "walk_straight.png", type: "Continue" };
+}
+
+/* Extract the most useful short label from a directions instruction.
+   e.g. "Turn right onto King St N" → "Turn Right · King St N"
+        "Head south on Elm St"      → "Head South · Elm St"
+        "Destination will be on the right" → "Arrive" */
+function buildLabel(type, instruction) {
+  // Patterns that name a street: "onto X", "on X", "toward X"
+  if (/destination will be/i.test(instruction)) return "Arrive";
+  const m = instruction.match(/(?:onto|on|toward)\s+([^,\.]+)/i);
+  if (m) {
+    // Trim at "Destination", "Take", or sentence boundaries
+    const street = m[1].replace(/\s+(Destination|Take|Turn|Continue|Head).*/i, "").trim();
+    if (street && !/^(the|a |your)/i.test(street)) {
+      return `${type} · ${street}`;
+    }
+  }
+  return type;
 }
 
 /* parse distance string like "47 m" or "0.2 km" into metres */
@@ -93,25 +111,54 @@ app.get("/api/nearest-grocery", async (req, res) => {
     const steps = legs?.steps || [];
 
     const MIN_STEP_METRES = 30;
-    const keySteps = steps.filter((s, i) => {
-      const isLast = i === steps.length - 1;
-      return isLast || toMetres(s.distance?.text) >= MIN_STEP_METRES;
-    });
 
-    const route = keySteps.map((s, i) => {
-      const meta = maneuverMeta(s.maneuver);
+    // Build labelled steps, filter short ones, then merge consecutive duplicates
+    const labelled = steps.map(s => {
+      const meta        = maneuverMeta(s.maneuver);
+      const instruction = stripHtml(s.html_instructions);
       return {
-        step:          i + 1,
-        instruction:   stripHtml(s.html_instructions),
-        rohingya_text: stripHtml(s.html_instructions),
-        distance:      s.distance?.text,
-        duration:      s.duration?.text,
+        instruction,
+        distanceText:  s.distance?.text,
+        distanceM:     toMetres(s.distance?.text),
+        durationSecs:  s.duration?.value ?? 0,
         image:         `/public/images/${meta.image}`,
-        emoji:         meta.emoji,
-        label:         meta.label,
-        audio:         `/public/audio/${routeAudioForIndex(i)}`
+        label:         buildLabel(meta.type, instruction),
       };
     });
+
+    const isLast = i => i === labelled.length - 1;
+
+    // Merge consecutive steps with the same label into one
+    const merged = labelled.reduce((acc, cur, i) => {
+      const prev = acc[acc.length - 1];
+      if (prev && prev.label === cur.label && !isLast(i)) {
+        // Accumulate distance/duration into the previous step
+        prev.distanceM    += cur.distanceM;
+        prev.durationSecs += cur.durationSecs;
+        const totalM = prev.distanceM;
+        prev.distanceText = totalM >= 1000
+          ? `${(totalM / 1000).toFixed(1)} km`
+          : `${Math.round(totalM)} m`;
+      } else {
+        acc.push({ ...cur });
+      }
+      return acc;
+    }, []);
+
+    // Drop very short steps (keep last always)
+    const keySteps = merged.filter((s, i) =>
+      i === merged.length - 1 || s.distanceM >= MIN_STEP_METRES
+    );
+
+    const route = keySteps.map((s, i) => ({
+      step:          i + 1,
+      instruction:   s.instruction,
+      rohingya_text: s.instruction,
+      distance:      s.distanceText,
+      image:         s.image,
+      label:         s.label,
+      audio:         `/public/audio/${routeAudioForIndex(i)}`
+    }));
 
     const store_steps = [
       { step:1, instruction:"Enter through the front door",  rohingya_text:"দোকানে ঢুকুন",      image:"/public/images/store_enter.png",   audio:"/public/audio/store_step1.mp3" },
