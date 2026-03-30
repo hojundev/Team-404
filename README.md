@@ -1,4 +1,4 @@
-# [`Sahayyo (সাহায্য)`](https://uwaterloo.ca/artificial-intelligence-institute/events/ai-data-science-good-hackathon-winter-2026)
+# [`Sahayyo (সাহায্য)`](https://uwaterloo.ca/artificial-intelligence-institute/news/ai-data-science-good-hackathon-empowers-students-support)
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat\&logo=javascript\&logoColor=black) ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white) ![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white)
 
